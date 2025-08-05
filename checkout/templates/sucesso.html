@@ -1,0 +1,12 @@
+{# checkout/templates/checkout/sucesso.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pedido Realizado com Sucesso!{% endblock %}
+
+{% block content %}
+    <h1>Pedido Realizado com Sucesso!</h1>
+    <p>Obrigado pela sua compra. Seu pedido foi processado e será enviado em breve.</p>
+    <p>Você receberá um e-mail de confirmação com os detalhes do seu pedido.</p>
+    <p><a href="{% url 'product:home' %}">Continuar comprando</a></p>
+{% endblock %}

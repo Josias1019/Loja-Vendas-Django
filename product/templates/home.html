@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Página Inicial da Loja{% endblock %}
+{% block header_title %}Bem-vindo à Nossa Loja!{% endblock %}
+
+{% block content %}
+    {# Inclui o template product.html que lista os produtos #}
+    {% include 'product.html' %}
+{% endblock %}

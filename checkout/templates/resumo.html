@@ -1,0 +1,67 @@
+{# checkout/templates/checkout/resumo.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resumo do Pedido{% endblock %}
+
+{% block content %}
+    <h1>Resumo do Pedido</h1>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if carrinho and carrinho.itens.exists and checkout_dados %}
+        <h2>Itens do Pedido</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th>Preço Unitário</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in carrinho.itens.all %}
+                    <tr>
+                        <td>{{ item.produto.nome }}</td>
+                        <td>{{ item.quantidade }}</td>
+                        <td>R$ {{ item.produto.precoDesconto|floatformat:2 }}</td>
+                        <td>R$ {{ item.subtotal|floatformat:2 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Total Geral:</td>
+                    <td>R$ {{ carrinho.total_geral|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <h2>Informações de Entrega</h2>
+        <p><strong>Nome Completo:</strong> {{ checkout_dados.nome_completo }}</p>
+        <p><strong>E-mail:</strong> {{ checkout_dados.email }}</p>
+        {% if checkout_dados.telefone %}<p><strong>Telefone:</strong> {{ checkout_dados.telefone }}</p>{% endif %}
+        <p><strong>Endereço:</strong> {{ checkout_dados.endereco }}</p>
+        <p><strong>Cidade:</strong> {{ checkout_dados.cidade }}</p>
+        <p><strong>Estado:</strong> {{ checkout_dados.estado }}</p>
+        <p><strong>CEP:</strong> {{ checkout_dados.cep }}</p>
+
+        {# Botão para CONFIRMAR o pedido e (futuramente) ir para o pagamento #}
+        <form action="{% url 'checkout:confirmar' %}" method="post">
+            {% csrf_token %}
+            <button type="submit">Confirmar Pedido e Ir para Pagamento</button>
+        </form>
+
+        <p><a href="{% url 'checkout:iniciar' %}">Voltar para preencher dados</a></p>
+
+    {% else %}
+        <p>Não há dados de pedido para exibir. Por favor, <a href="{% url 'checkout:iniciar' %}">inicie o checkout</a>.</p>
+    {% endif %}
+{% endblock %}

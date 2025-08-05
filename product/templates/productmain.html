@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ produtos.nome }}</title> {# Use 'produtos' aqui #}
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+</head>
+<body>
+    {# Imagem Principal #}
+    <img src="{{ produtos.imagem.url }}" alt="{{ produtos.nome }}" style="max-width: 250px; height: auto;">
+
+    <div class="gallery">
+        <h3>Galeria de Imagens:</h3>
+        {# Itere sobre 'produtos.imagens_extra.all' para as imagens extras #}
+        {% for img_extra in produtos.imagens_extra.all %}
+            <div style="border: 1px solid green; margin: 5px; padding: 5px;">
+                <p>URL: {{ img_extra.imagem.url }}</p>
+                <img src="{{ img_extra.imagem.url }}"
+                            alt="{{ img_extra.descricao|default:produtos.nome }}"
+                            style="max-width: 250px; height: auto;">
+            </div>
+        {% empty %}
+            <p class="alert">Nenhuma imagem extra disponível para este produto.</p>
+        {% endfor %}
+    </div>
+
+    <h1>{{ produtos.nome }}</h1>
+    <p>Descrição: {{ produtos.descricao }}</p>
+    <p>Preço: R$ {{ produtos.preco_venda }}</p>
+
+    {# ... Outros detalhes do produto ... #}
+
+</body>
+</html>

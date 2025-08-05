@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Meu E-commerce{% endblock %}</title>
+    
+    
+
+
+</head>
+
+<body>
+
+    <header>
+        <h1>PÁGINA PRINCIPAL</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'product:home' %}">Home</a></li>
+                <li><a href="{% url 'cart:ver_carrinho' %}">Carrinho</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'accounts:profile' %}">Olá, {{ user.username }}!</a></li>
+                    <li><a href="{% url 'accounts:logout' %}">Sair</a></li>
+                {% else %}
+                    <li><a href="{% url 'accounts:login' %}">Login</a></li>
+                    <li><a href="{% url 'accounts:register' %}">Cadastro</a></li>
+                {% endif %}
+                {# Adicione aqui o display de mensagens do Django #}
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+        
+        {% if messages %}
+
+            <ul class="messages">
+
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+
+            </ul>
+
+        {% endif %}
+
+        
+        {% block content %}
+
+            {# O conteúdo padrão, se houver, ou deixado em branco para ser preenchido pelos templates filhos #}
+
+        {% endblock %}
+
+    </main>
+
+    <footer>
+
+        <p>&copy; 2024 Meu E-commerce. Todos os direitos reservados.</p>
+
+        {# Adicione links para rodapés, informações de contato, etc. #}
+
+    </footer>
+
+    {# Seus links para JavaScript aqui #}
+    {# Exemplo: <script src="{% static 'js/script.js' %}"></script> #}
+
+</body>
+
+</html>

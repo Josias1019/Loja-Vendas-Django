@@ -1,0 +1,541 @@
+{% load static %} 
+
+<div class="search-section">
+    <input type="text" id="campoBusca" placeholder="Pesquisar produtos...">
+    <button id="btnBusca">Buscar</button>
+    <div id="loadingIndicator" style="display: none;">Carregando resultados...</div>
+
+    <div class="category-filter" style="margin-top: 15px;">
+        <label for="filtroCategoria">Filtrar por Categoria:</label>
+        <select id="filtroCategoria">
+            <option value="">Todas as Categorias</option>
+        </select>
+    </div>
+
+    <div class="brand-filter" style="margin-top: 15px;">
+        <label for="filtroMarca">Filtrar por Marca:</label>
+        <select id="filtroMarca">
+            <option value="">Todas as Marcas</option>
+        </select>
+    </div>
+
+    {# NOVO: Filtro por Cor #}
+    <div class="color-filter" style="margin-top: 15px;">
+        <label for="filtroCor">Filtrar por Cor:</label>
+        <select id="filtroCor">
+            <option value="">Todas as Cores</option>
+        </select>
+    </div>
+
+    {# NOVO: Filtro por Tamanho #}
+    <div class="size-filter" style="margin-top: 15px;">
+        <label for="filtroTamanho">Filtrar por Tamanho:</label>
+        <select id="filtroTamanho">
+            <option value="">Todos os Tamanhos</option>
+        </select>
+    </div>
+
+</div>
+
+<div class="produtos" id="produtosExistentes">
+    <h1>Lançamentos</h1>
+    <div class="produtoDestaqueDescontoLancamento">
+        {% for produto in lancamento %}
+            <div class="item">
+                <div class="image">
+                    <a href="{% url 'product:produto' slug=produto.slug %}">
+                        <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" style="max-width: 250px; height: auto;">
+                    </a>
+                </div>
+                <div class="preco">
+                    <h2>{{ produto.nome }}</h2>
+                    {% if produto.desconto > 0 %}
+                        <p class="desconto">
+                            De: <span style="text-decoration: line-through red;">R$ {{ produto.preco_venda|floatformat:2 }}</span>
+                        </p>
+                        <div class="button">
+                            <p class="preco2" style="display: flex;">
+                                <span class="porcentagem" style="color: red;">-{{ produto.desconto }}%</span>
+                                <span class="rs">R$ </span>{{ produto.precoDesconto|floatformat:2 }}
+                            </p>
+                           <form action="{% url 'cart:adicionar_ao_carrinho' %}" method="post">
+                                {% csrf_token %}
+
+                                <label for="variant_select">Selecione a Variação:</label>
+                                <select name="variant_id" id="variant_select">
+                                    {% for variant in produto.productvariant_set.all %} {# Assumindo que você tem um related_name ou _set para as variantes #}
+                                        <option value="{{ variant.id }}">
+                                            {{ variant.cor }} / {{ variant.tamanho }} (Estoque: {{ variant.quantidade }}) - R${{ variant.preco_final_variacao|floatformat:2 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <br>
+
+                                <label for="quantidade">Quantidade:</label>
+                                <input type="number" id="quantidade" name="quantidade" value="1" min="1">
+                                <br>
+
+                                <button type="submit" class="btn btn-primary">Adicionar ao Carrinho</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="button">
+                            <p style="margin-bottom: 24px; margin-top: 4%; display: flex;">
+                                <span class="rs" style="margin-right: 3%;">R$</span>{{ produto.preco_venda|floatformat:2 }}
+                            </p>
+                            <form action="{% url 'cart:adicionar_ao_carrinho' %}" method="post">
+                                {% csrf_token %}
+
+                                <label for="variant_select">Selecione a Variação:</label>
+                                <select name="variant_id" id="variant_select">
+                                    {% for variant in produto.productvariant_set.all %} {# Assumindo que você tem um related_name ou _set para as variantes #}
+                                        <option value="{{ variant.id }}">
+                                            {{ variant.cor }} / {{ variant.tamanho }} (Estoque: {{ variant.quantidade }}) - R${{ variant.preco_final_variacao|floatformat:2 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <br>
+
+                                <label for="quantidade">Quantidade:</label>
+                                <input type="number" id="quantidade" name="quantidade" value="1" min="1">
+                                <br>
+
+                                <button type="submit" class="btn btn-primary">Adicionar ao Carrinho</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h1>Destaques</h1>
+    <div class="produtoDestaqueDescontoLancamento">
+        {% for produto in produtoDestaque %}
+            <div class="item">
+                <div class="image">
+                    <a href="{% url 'product:produto' slug=produto.slug %}">
+                        <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" style="max-width: 250px; height: auto;">
+                    </a>
+                </div>
+                <div class="preco">
+                    <h2>{{ produto.nome }}</h2>
+                    {% if produto.desconto > 0 %}
+                        <p class="desconto">De: <span style="text-decoration: line-through red;">R$ {{ produto.preco_venda|floatformat:2 }}</span></p>
+                        <p class="preco2"><span class="porcentagem" style="color: red;">-{{ produto.desconto }}%</span> R$ {{ produto.precoDesconto|floatformat:2 }}</p>
+                    {% else %}
+                        <p>R$ {{ produto.preco_venda|floatformat:2 }}</p>
+                    {% endif %}
+                </div>
+                <form action="{% url 'cart:adicionar_ao_carrinho' %}" method="post">
+                    {% csrf_token %}
+
+                    <label for="variant_select">Selecione a Variação:</label>
+                    <select name="variant_id" id="variant_select">
+                        {% for variant in produto.productvariant_set.all %} {# Assumindo que você tem um related_name ou _set para as variantes #}
+                            <option value="{{ variant.id }}">
+                                {{ variant.cor }} / {{ variant.tamanho }} (Estoque: {{ variant.quantidade }}) - R${{ variant.preco_final_variacao|floatformat:2 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <br>
+
+                    <label for="quantidade">Quantidade:</label>
+                    <input type="number" id="quantidade" name="quantidade" value="1" min="1">
+                    <br>
+
+                    <button type="submit" class="btn btn-primary">Adicionar ao Carrinho</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <h1>Produtos com Desconto</h1>
+    <div class="produtoDestaqueDescontoLancamento">
+        {% for produto in produtoDesconto %}
+            <div class="item">
+                <div class="image">
+                    <a href="{% url 'product:produto' slug=produto.slug %}" >
+                       <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" style="max-width: 250px; height: auto;">
+                    </a>
+                </div>
+                <div class="preco">
+                    <h2>{{ produto.nome }}</h2>
+                    {% if produto.desconto > 0 %}
+                        <p class="desconto">De: <span style="text-decoration: line-through red;">R$ {{ produto.preco_venda|floatformat:2 }}</span></p>
+                        <p class="preco2"><span class="porcentagem" style="color: red;">-{{ produto.desconto }}%</span> R$ {{ produto.precoDesconto|floatformat:2 }}</p>
+                    {% endif %}
+                </div>
+                <form action="{% url 'cart:adicionar_ao_carrinho' %}" method="post">
+                    {% csrf_token %}
+
+                    <label for="variant_select">Selecione a Variação:</label>
+                    <select name="variant_id" id="variant_select">
+                        {% for variant in produto.productvariant_set.all %} {# Assumindo que você tem um related_name ou _set para as variantes #}
+                            <option value="{{ variant.id }}">
+                                {{ variant.cor }} / {{ variant.tamanho }} (Estoque: {{ variant.quantidade }}) - R${{ variant.preco_final_variacao|floatformat:2 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <br>
+
+                    <label for="quantidade">Quantidade:</label>
+                    <input type="number" id="quantidade" name="quantidade" value="1" min="1">
+                    <br>
+
+                    <button type="submit" class="btn btn-primary">Adicionar ao Carrinho</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h1>Todos os Produtos</h1>
+    <div class="protudoPrincipal">
+        {% for produto in produtos %}
+            <div class="produto-item">
+                <div class="image">
+                    <a href="{% url 'product:produto' slug=produto.slug %}">
+                        <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" style="max-width: 250px; height: auto;">
+                    </a>
+                </div>
+                <div class="preco">
+                    <h2>{{ produto.nome }}</h2>
+                    {% if produto.desconto > 0 %}
+                        <p class="desconto">De: <span style="text-decoration: line-through red;">R$ {{ produto.preco_venda|floatformat:2 }}</span></p>
+                        <p class="preco2"><span class="porcentagem" style="color: red;">-{{ produto.desconto }}%</span> R$ {{ produto.precoDesconto|floatformat:2 }}</p>
+                    {% else %}
+                        <p>R$ {{ produto.preco_venda|floatformat:2 }}</p>
+                    {% endif %}
+                </div>
+                <form action="{% url 'cart:adicionar_ao_carrinho' %}" method="post">
+                    {% csrf_token %}
+
+                    <label for="variant_select">Selecione a Variação:</label>
+                    <select name="variant_id" id="variant_select">
+                        {# VERIFIQUE ESTA LINHA: como você acessa as variantes do produto? #}
+                        {# A forma mais comum (se não definiu related_name) é productvariant_set #}
+                        {% for variant in produto.variants.all %}
+                            <option value="{{ variant.id }}">
+                                {{ variant.cor }} / {{ variant.tamanho }} (Estoque: {{ variant.quantidade }}) - R${{ variant.preco_final_variacao|floatformat:2 }}
+                            </option>
+                        {% empty %}
+                            <option value="" disabled selected>Nenhuma variação disponível</option>
+                        {% endfor %}
+                    </select>
+                    <br>
+
+                    <label for="quantidade">Quantidade:</label>
+                    <input type="number" id="quantidade" name="quantidade" value="1" min="1">
+                    <br>
+
+                    <button type="submit" class="btn btn-primary">Adicionar ao Carrinho</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="resultadosBusca" class="produtos" style="display: none;">
+    <h1>Resultados da Busca</h1>
+    <div id="produtosBuscaContainer" class="protudoPrincipal">
+    </div>
+    <div id="nenhumResultado" style="display: none; text-align: center; margin-top: 20px;">
+        <p>Nenhum produto encontrado para sua busca.</p>
+    </div>
+</div>
+
+
+<script>
+    const campoBusca = document.getElementById('campoBusca');
+    const btnBusca = document.getElementById('btnBusca');
+    const resultadosBuscaDiv = document.getElementById('resultadosBusca');
+    const produtosBuscaContainer = document.getElementById('produtosBuscaContainer');
+    const nenhumResultadoDiv = document.getElementById('nenhumResultado');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const produtosExistentesDiv = document.getElementById('produtosExistentes');
+    const filtroCategoria = document.getElementById('filtroCategoria');
+    const filtroMarca = document.getElementById('filtroMarca');
+    const filtroCor = document.getElementById('filtroCor'); // NOVO: Elemento do dropdown de cor
+    const filtroTamanho = document.getElementById('filtroTamanho'); // NOVO: Elemento do dropdown de tamanho
+
+    // Função para renderizar um único produto (sem mudanças significativas aqui)
+    function renderizarProduto(produto) {
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('produto-item');
+
+        const precoVendaNum = parseFloat(produto.preco_venda);
+        const precoDescontoNum = produto.precoDesconto ? parseFloat(produto.precoDesconto) : precoVendaNum;
+
+        let precoHtml = '';
+        if (produto.desconto > 0) {
+            precoHtml = `
+                <p class="desconto">De: <span style="text-decoration: line-through red;">R$ ${precoVendaNum.toFixed(2).replace('.', ',')}</span></p>
+                <p class="preco2">
+                    <span class="porcentagem" style="color: red;">-${produto.desconto}%</span>
+                    <span class="rs">R$ </span>${precoDescontoNum.toFixed(2).replace('.', ',')}
+                </p>
+            `;
+        } else {
+            precoHtml = `<p><span class="rs">R$</span>${precoVendaNum.toFixed(2).replace('.', ',')}</p>`;
+        }
+
+        const categoriaNome = produto.categoria ? produto.categoria.nome : 'N/A';
+        const marcaNome = produto.marca ? produto.marca.nome : 'N/A';
+
+        // Adaptação para o caminho da imagem se você não tiver mais 'imagem_variacao'
+        // Se 'produto.imagem' é o campo principal, então 'produto.imagem_url' é o correto.
+        // Se você está usando ProductVariant, o ProductVariantSerializer não expõe 'imagem' diretamente do Produto.
+        // Para simplificar, vou manter como estava, assumindo que `produto.imagem_url` vem do ProdutoSerializer.
+        const imageUrl = produto.imagem || '{% static "default.jpg" %}'; // Se o serializer retornar 'imagem' diretamente.
+                                                                        // Se o serializer retornar um campo 'imagem_url', use produto.imagem_url
+
+        itemDiv.innerHTML = `
+            <div class="image">
+                <a href="/produto/${produto.slug}/">
+                    <img src="${imageUrl}" alt="${produto.nome}" style="max-width: 250px; height: auto;">
+                </a>
+            </div>
+            <div class="preco">
+                <h2>${produto.nome}</h2>
+                <p>Categoria: ${categoriaNome}</p>
+                <p>Marca: ${marcaNome}</p>
+                ${precoHtml}
+            </div>
+            <form action="/carrinho/adicionar/${produto.slug}/" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="quantidade" value="1">
+                <button type="submit"><i class='bx bx-cart-add'></i> Adicionar</button>
+            </form>
+        `;
+        return itemDiv;
+    }
+
+    // Função para carregar e popular o dropdown de categorias
+    function carregarCategorias() {
+        fetch('/api/categorias/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(categorias => {
+                categorias.forEach(categoria => {
+                    const option = document.createElement('option');
+                    option.value = categoria.id;
+                    option.textContent = categoria.nome;
+                    filtroCategoria.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar categorias:', error);
+            });
+    }
+
+    // Função para carregar e popular o dropdown de marcas
+    function carregarMarcas() {
+        fetch('/api/marcas/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(marcas => {
+                marcas.forEach(marca => {
+                    const option = document.createElement('option');
+                    option.value = marca.id;
+                    option.textContent = marca.nome;
+                    filtroMarca.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar marcas:', error);
+            });
+    }
+
+    // NOVO: Função para carregar e popular o dropdown de cores
+    function carregarCores() {
+        fetch('/api/produtos/cores/') // Sua nova API para cores únicas
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(cores => {
+                cores.forEach(cor => {
+                    if (cor) { // Garante que a cor não é nula ou vazia
+                        const option = document.createElement('option');
+                        option.value = cor;
+                        option.textContent = cor;
+                        filtroCor.appendChild(option);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar cores:', error);
+            });
+    }
+
+    // NOVO: Função para carregar e popular o dropdown de tamanhos
+    function carregarTamanhos() {
+        fetch('/api/produtos/tamanhos/') // Sua nova API para tamanhos únicos
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(tamanhos => {
+                tamanhos.forEach(tamanho => {
+                    if (tamanho) { // Garante que o tamanho não é nulo ou vazio
+                        const option = document.createElement('option');
+                        option.value = tamanho;
+                        option.textContent = tamanho;
+                        filtroTamanho.appendChild(option);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar tamanhos:', error);
+            });
+    }
+
+
+    // Função principal de busca (MODIFICADA para incluir cor e tamanho)
+    function realizarBusca() {
+        const query = campoBusca.value.trim();
+        const categoriaSelecionadaId = filtroCategoria.value;
+        const marcaSelecionadaId = filtroMarca.value;
+        const corSelecionada = filtroCor.value; // Pega a cor selecionada
+        const tamanhoSelecionado = filtroTamanho.value; // Pega o tamanho selecionado
+
+        // Se a busca estiver vazia E "Todas as Categorias" E "Todas as Marcas"
+        // E "Todas as Cores" E "Todos os Tamanhos" estiverem selecionados,
+        // esconde os resultados da busca e mostra os produtos normais.
+        if (query === '' && 
+            categoriaSelecionadaId === '' && 
+            marcaSelecionadaId === '' &&
+            corSelecionada === '' && // NOVO: Condição para cor
+            tamanhoSelecionado === '' // NOVO: Condição para tamanho
+        ) {
+            resultadosBuscaDiv.style.display = 'none';
+            produtosExistentesDiv.style.display = 'block';
+            return;
+        }
+
+        produtosExistentesDiv.style.display = 'none';
+        resultadosBuscaDiv.style.display = 'block';
+        produtosBuscaContainer.innerHTML = '';
+        nenhumResultadoDiv.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+
+        // URL base para a API de produtos, que agora aceita os filtros de cor e tamanho
+        // Substitua '/api/busca/' por '/api/produtos/' para usar a ProdutoListAPIView com os novos filtros.
+        let url = `/api/produtos/?q=${encodeURIComponent(query)}`; // Remova o 'q' daqui se sua ProdutoListAPIView não usar 'q'
+
+        // Importante: Sua `ProdutoListAPIView` NÃO USA o parâmetro `q` da busca genérica.
+        // Ela usa `cor` e `tamanho`. Se você quer que a `ProdutoListAPIView` também filtre por `q` (texto),
+        // você precisa adicionar essa lógica ao seu `views.py` na `ProdutoListAPIView`.
+        // Por enquanto, vou fazer a URL apontar para a `ProdutoListAPIView` e incluir os novos filtros.
+        // Se `q` precisa ser combinado, você terá que refatorar um pouco mais a busca_produtos_api ou a ProdutoListAPIView.
+
+        // Dada a sua `views.py` atual, `ProdutoListAPIView` não filtra por `q`.
+        // A `busca_produtos_api` filtra por `q`, `categoria_id`, `marca_id`.
+        // A `ProdutoListAPIView` que modificamos filtra por `cor` e `tamanho`.
+
+        // Para ter todos os filtros (q, categoria, marca, cor, tamanho) em uma única requisição,
+        // a melhor abordagem é **unificar a lógica da `busca_produtos_api` dentro da `ProdutoListAPIView`**.
+        // VOU ASSUMIR QUE VOCÊ VAI FAZER ISSO, E VOU APONTAR PARA `/api/produtos/` com todos os parâmetros.
+
+        // Ajustando a URL para chamar a `ProdutoListAPIView` com todos os parâmetros.
+        // **Você precisará adicionar a lógica para `q`, `categoria_id`, `marca_id` na `ProdutoListAPIView` no `views.py`!**
+        let apiUrl = `/api/produtos/?`; 
+        const params = [];
+
+        if (query) {
+            params.push(`q=${encodeURIComponent(query)}`);
+        }
+        if (categoriaSelecionadaId !== '') {
+            params.push(`categoria_id=${encodeURIComponent(categoriaSelecionadaId)}`);
+        }
+        if (marcaSelecionadaId !== '') {
+            params.push(`marca_id=${encodeURIComponent(marcaSelecionadaId)}`);
+        }
+        if (corSelecionada !== '') { // NOVO: Adiciona o filtro de cor
+            params.push(`cor=${encodeURIComponent(corSelecionada)}`);
+        }
+        if (tamanhoSelecionado !== '') { // NOVO: Adiciona o filtro de tamanho
+            params.push(`tamanho=${encodeURIComponent(tamanhoSelecionado)}`);
+        }
+        
+        apiUrl += params.join('&');
+
+        fetch(apiUrl) 
+            .then(response => {
+                loadingIndicator.style.display = 'none';
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Se sua ProdutoListAPIView retornar a lista de produtos diretamente (não um objeto com "produtos": [...])
+                // `data` já será o array de produtos. Se ela retorna `{ "produtos": [...] }` como a `busca_produtos_api`,
+                // você precisará ajustar aqui. Pelo que vi no serializer, ela retorna um array direto.
+                const produtosEncontrados = data; // Assumindo que ProdutoListAPIView retorna um array direto
+
+                if (produtosEncontrados && produtosEncontrados.length > 0) {
+                    produtosEncontrados.forEach(produtoData => {
+                        produtosBuscaContainer.appendChild(renderizarProduto(produtoData));
+                    });
+                } else {
+                    nenhumResultadoDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar produtos:', error);
+                loadingIndicator.style.display = 'none';
+                produtosBuscaContainer.innerHTML = '<p style="color: red;">Ocorreu um erro ao buscar produtos. Tente novamente.</p>';
+            });
+    }
+
+    // Event Listeners
+    btnBusca.addEventListener('click', realizarBusca);
+    campoBusca.addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            realizarBusca();
+        }
+    });
+
+    // Adiciona listener para o evento 'change' dos dropdowns
+    filtroCategoria.addEventListener('change', realizarBusca);
+    filtroMarca.addEventListener('change', realizarBusca);
+    filtroCor.addEventListener('change', realizarBusca);    // NOVO: Listener para cor
+    filtroTamanho.addEventListener('change', realizarBusca); // NOVO: Listener para tamanho
+
+
+    campoBusca.addEventListener('input', function() {
+        if (this.value.trim() === '' && 
+            filtroCategoria.value === '' && 
+            filtroMarca.value === '' &&
+            filtroCor.value === '' && // NOVO: Condição para input de cor
+            filtroTamanho.value === '' // NOVO: Condição para input de tamanho
+        ) {
+            resultadosBuscaDiv.style.display = 'none';
+            produtosExistentesDiv.style.display = 'block';
+            produtosBuscaContainer.innerHTML = '';
+            nenhumResultadoDiv.style.display = 'none';
+        }
+    });
+
+    // Chamar as funções para carregar categorias, marcas, cores e tamanhos quando a página carregar
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarCategorias();
+        carregarMarcas();
+        carregarCores();    // NOVO: Chamar função para carregar cores
+        carregarTamanhos(); // NOVO: Chamar função para carregar tamanhos
+    });
+
+</script>

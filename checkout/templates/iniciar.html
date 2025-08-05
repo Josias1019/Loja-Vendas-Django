@@ -1,0 +1,36 @@
+{# checkout/templates/checkout/iniciar.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Finalizar Compra{% endblock %}
+
+{% block content %}
+    <h1>Finalizar Compra</h1>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if carrinho and carrinho.itens.exists %}
+        <h2>Resumo do Pedido</h2>
+        <ul>
+            {% for item in carrinho.itens.all %}
+                <li>{{ item.quantidade }} x {{ item.produto.nome }} - R$ {{ item.subtotal|floatformat:2 }}</li>
+            {% endfor %}
+        </ul>
+        <h3>Total do Carrinho: R$ {{ carrinho.total_geral|floatformat:2 }}</h3>
+
+        <h2>Informações de Entrega</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }} {# Renderiza o formulário como parágrafos #}
+            <button type="submit">Confirmar Pedido</button>
+        </form>
+    {% else %}
+        <p>Seu carrinho está vazio. <a href="{% url 'product:home' %}">Voltar para a loja</a></p>
+    {% endif %}
+{% endblock %}
