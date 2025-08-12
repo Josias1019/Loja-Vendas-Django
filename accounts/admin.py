@@ -15,9 +15,9 @@ class PedidoInline(admin.TabularInline):
     model = Pedido
     extra = 0 # Não exibe campos extras vazios por padrão
     # Campos que serão exibidos para cada Pedido
-    fields = ('id', 'data_pedido', 'status', 'total_pago', 'endereco', 'cidade', 'estado', 'cep')
+    fields = ('id', 'data_criacao', 'status', 'total_geral', 'endereco', 'cidade', 'estado', 'cep')
     # Define campos somente leitura para evitar alterações acidentais
-    readonly_fields = ('id', 'data_pedido', 'status', 'total_pago', 'endereco', 'cidade', 'estado', 'cep')
+    readonly_fields = ('id', 'data_criacao', 'status', 'total_geral', 'endereco', 'cidade', 'estado', 'cep')
     can_delete = False # Impede que pedidos sejam deletados diretamente por aqui
 
     # Isso fará com que o ID do pedido seja um link para a página de edição do pedido

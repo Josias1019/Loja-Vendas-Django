@@ -28,9 +28,9 @@ def iniciar_checkout(request):
     # --- VERIFICAÇÃO DE ESTOQUE ---
     itens_fora_de_estoque = []
     for item_carrinho in carrinho.itens.all():
-        if item_carrinho.quantidade > item_carrinho.produto.quantidade:
+        if item_carrinho.quantidade > item_carrinho.product_variant.quantidade:
             itens_fora_de_estoque.append(
-                f"{item_carrinho.produto.nome} (disponível: {item_carrinho.produto.quantidade_estoque}, no carrinho: {item_carrinho.quantidade})"
+                f"{item_carrinho.product_variant.produto.nome} ({item_carrinho.product_variant.cor}/{item_carrinho.product_variant.tamanho}) - disponível: {item_carrinho.product_variant.quantidade}, no carrinho: {item_carrinho.quantidade}"
             )
     if itens_fora_de_estoque:
         msg_erro = "Os seguintes itens excedem o estoque disponível: " + "; ".join(itens_fora_de_estoque)
