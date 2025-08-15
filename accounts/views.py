@@ -2,6 +2,7 @@
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
+from cart.models import Carrinho
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
@@ -44,6 +45,21 @@ def user_login(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f"Bem-vindo de volta, {username}!")
+
+                # --- NOVO CÓDIGO A SER ADICIONADO ---
+                session_key = request.session.session_key
+                if session_key:
+                    try:
+                        carrinho_anonimo = Carrinho.objects.get(session_key=session_key)
+                        # Associa o carrinho da sessão ao usuário
+                        carrinho_anonimo.usuario = user
+                        carrinho_anonimo.session_key = None # Remove a associação com a sessão
+                        carrinho_anonimo.save()
+                        messages.info(request, "Seu carrinho foi recuperado!")
+                    except Carrinho.DoesNotExist:
+                        pass # Não há carrinho para a sessão, tudo bem.
+                # --- FIM DO NOVO CÓDIGO ---
+
                 return redirect('accounts:profile')
             else:
                 messages.error(request, "Nome de usuário ou senha inválidos.")
@@ -61,7 +77,7 @@ def user_logout(request):
 
 @login_required
 def profile(request):
-    pedidos = Pedido.objects.filter(usuario=request.user).order_by('-data_pedido')
+    pedidos = Pedido.objects.filter(usuario=request.user).order_by('-data_criacao')
 
     if request.method == 'POST':
         user_form = UserEditForm(request.POST, instance=request.user)

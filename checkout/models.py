@@ -87,4 +87,5 @@ class ItemPedido(models.Model):
     @property
     def subtotal(self):
         # O preço unitário_na_compra SEMPRE deve estar preenchido
-        return self.quantidade * self.preco_unitario_na_compra
+        preco = self.preco_unitario_na_compra if self.preco_unitario_na_compra is not None else 0
+        return self.quantidade * preco

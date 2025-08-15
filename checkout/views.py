@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db import transaction
+
+# Importar o modelo de Perfil para pré-preencher o formulário
+from accounts.models import Profile  
 from cart.models import Carrinho, ItemCarrinho
 from .models import Pedido, ItemPedido
 from .forms import CheckoutForm
-from django.db import transaction
 
 
 def iniciar_checkout(request):
@@ -35,26 +38,35 @@ def iniciar_checkout(request):
     if itens_fora_de_estoque:
         msg_erro = "Os seguintes itens excedem o estoque disponível: " + "; ".join(itens_fora_de_estoque)
         messages.error(request, msg_erro)
-        return redirect('cart:ver_carrinho') # Redireciona para o carrinho para o usuário ajustar
+        return redirect('cart:ver_carrinho')
 
     if request.method == 'POST':
         form = CheckoutForm(request.POST)
         if form.is_valid():
-            # Armazenar os dados do formulário na sessão e redirecionar para o resumo
-            # (Não criar o pedido ainda, pois o pagamento será em outro app)
             request.session['checkout_dados'] = form.cleaned_data
-            return redirect('checkout:resumo') # <--- REDIRECIONA PARA A PÁGINA DE RESUMO
+            return redirect('checkout:resumo')
 
         else:
             messages.error(request, "Por favor, corrija os erros no formulário.")
     else:
-        initial_data = {}
+        # --- Lógica de pré-preenchimento CORRIGIDA ---
+        form = CheckoutForm()
         if request.user.is_authenticated:
-            # Tentar pré-preencher com dados do usuário logado (se tiver um perfil)
-            initial_data['nome_completo'] = request.user.get_full_name() if request.user.first_name and request.user.last_name else request.user.username
-            initial_data['email'] = request.user.email
-            # Adicione outros campos como endereço se tiver no perfil do usuário
-        form = CheckoutForm(initial=initial_data)
+            try:
+                user_profile = request.user.profile
+                initial_data = {
+                    # Usa os campos do modelo User e Profile
+                    'nome_completo': request.user.get_full_name(),
+                    'email': request.user.email,
+                    'telefone': user_profile.telefone,
+                    'endereco': user_profile.endereco_padrao,
+                    'cidade': user_profile.cidade_padrao,
+                    'estado': user_profile.estado_padrao,
+                    'cep': user_profile.cep_padrao,
+                }
+                form = CheckoutForm(initial=initial_data)
+            except Profile.DoesNotExist:
+                pass
 
     return render(request, 'iniciar.html', {'form': form, 'carrinho': carrinho})
 
@@ -78,13 +90,11 @@ def resumo_pedido(request):
         messages.warning(request, "Seu carrinho está vazio. Adicione produtos antes de finalizar a compra.")
         return redirect('cart:ver_carrinho')
 
-    # Recupera os dados do formulário da sessão
     checkout_dados = request.session.get('checkout_dados')
     if not checkout_dados:
         messages.error(request, "Dados de checkout não encontrados. Por favor, preencha o formulário novamente.")
         return redirect('checkout:iniciar')
 
-    # Passa o carrinho e os dados do formulário para o template
     context = {
         'carrinho': carrinho,
         'checkout_dados': checkout_dados,
@@ -92,7 +102,7 @@ def resumo_pedido(request):
     return render(request, 'resumo.html', context)
 
 
-@transaction.atomic # Garante que as operações sejam atômicas ao confirmar
+@transaction.atomic
 def confirmar_pedido(request):
     if request.method == 'POST':
         carrinho = None
@@ -118,11 +128,6 @@ def confirmar_pedido(request):
             messages.error(request, "Dados de checkout não encontrados. Por favor, preencha o formulário novamente.")
             return redirect('checkout:iniciar')
 
-        # --- AQUI É ONDE VOCÊ INTEGRARIA COM O APP DE PAGAMENTO ---
-        # Por enquanto, vamos simular a criação do pedido e a redução do estoque.
-        # No futuro, esta lógica seria chamada APÓS a confirmação de pagamento do gateway.
-
-        # 1. Criar o Pedido
         pedido = Pedido.objects.create(
             nome_completo=checkout_dados['nome_completo'],
             email=checkout_dados['email'],
@@ -131,36 +136,29 @@ def confirmar_pedido(request):
             cidade=checkout_dados['cidade'],
             estado=checkout_dados['estado'],
             cep=checkout_dados['cep'],
-            total_pago=carrinho.total_geral,
+            total_geral=carrinho.total_geral,
             usuario=request.user if request.user.is_authenticated else None,
             session_key=request.session.session_key if not request.user.is_authenticated else None,
-            status='Pendente' # Status inicial, seria 'Pago' após confirmação real
+            status='Pendente'
         )
 
-        # 2. Mover itens do carrinho para itens do pedido e REDUZIR ESTOQUE
         for item_carrinho in carrinho.itens.all():
             ItemPedido.objects.create(
                 pedido=pedido,
-                produto=item_carrinho.produto,
+                product_variant=item_carrinho.product_variant,
                 quantidade=item_carrinho.quantidade,
-                preco_unitario=item_carrinho.produto.precoDesconto
+                preco_unitario_na_compra=item_carrinho.product_variant.preco_final_variacao
             )
-            # Reduzir o estoque do produto
-            item_carrinho.produto.quantidade -= item_carrinho.quantidade
-            item_carrinho.produto.save() # Salva a mudança no estoque
+            item_carrinho.product_variant.quantidade -= item_carrinho.quantidade
+            item_carrinho.product_variant.save()
 
-        # 3. Limpar o carrinho após a criação do pedido
-        carrinho.itens.all().delete() # Deleta apenas os itens do carrinho, mantém o objeto Carrinho
-        # Se preferir deletar o objeto Carrinho, use: carrinho.delete()
-
-        # Limpa os dados de checkout da sessão
+        carrinho.itens.all().delete()
         if 'checkout_dados' in request.session:
             del request.session['checkout_dados']
 
         messages.success(request, "Seu pedido foi realizado com sucesso!")
         return redirect('checkout:sucesso')
     else:
-        # Se alguém tentar acessar /checkout/confirmar diretamente via GET
         messages.error(request, "Acesso inválido à confirmação do pedido.")
         return redirect('checkout:iniciar')
 

@@ -1,4 +1,4 @@
-{# accounts/templates/accounts/profile.html (Atualizado) #}
+{# accounts/templates/accounts/profile.html #}
 
 {% extends 'base.html' %}
 {% block title %}Meu Perfil{% endblock %}
@@ -12,12 +12,35 @@
     <h4>Dados da Conta:</h4>
     {{ user_form.as_p }}
     <h4>Dados do Perfil:</h4>
-    {{ profile_form.as_p }} {# --- RENDERIZA O FORMULÁRIO DO PROFILE #}
+    {{ profile_form.as_p }}
     <button type="submit">Atualizar Perfil</button>
 </form>
 
 <h3>Meus Pedidos</h3>
-{# ... (restante do código para pedidos) ... #}
+{% if pedidos %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID do Pedido</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pedido in pedidos %}
+            <tr>
+                <td>{{ pedido.id }}</td>
+                <td>{{ pedido.data_criacao|date:"d/m/Y H:i" }}</td>
+                <td>{{ pedido.get_status_display }}</td> {# Usa o get_status_display para texto amigável #}
+                <td>R$ {{ pedido.total_geral|floatformat:2|default:"0.00" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Você ainda não tem pedidos. Faça sua primeira compra!</p>
+{% endif %}
 
 <p><a href="{% url 'accounts:logout' %}">Sair</a></p>
 {% endblock %}
