@@ -1,9 +1,9 @@
-# cart/models.py (Versão Corrigida - Reafirmando)
-
 from django.db import models
 from django.conf import settings
-from product.models import Produto, ProductVariant # Importe ProductVariant
+from product.models import Produto, ProductVariant
 
+
+# MODELO DE CARRINHO
 class Carrinho(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     session_key = models.CharField(max_length=40, null=True, blank=True, unique=True)
@@ -20,14 +20,15 @@ class Carrinho(models.Model):
         return sum(item.subtotal for item in self.itens.all())
 
 
+# MODELO DE ITEM NO CARRINHO
 class ItemCarrinho(models.Model):
     carrinho = models.ForeignKey(Carrinho, related_name='itens', on_delete=models.CASCADE)
-    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE) # <--- ESSA É A MUDANÇA CRUCIAL
+    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
     quantidade = models.PositiveIntegerField(default=1)
     data_adicao = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('carrinho', 'product_variant') # <--- ESSA TAMBÉM
+        unique_together = ('carrinho', 'product_variant')
 
     def __str__(self):
         variant_info = f"({self.product_variant.cor}/{self.product_variant.tamanho})" if self.product_variant.cor or self.product_variant.tamanho else ""

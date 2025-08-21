@@ -1,16 +1,21 @@
-# accounts/views.py
-
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from cart.models import Carrinho
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-
-# Importe os formulários que você definiu em accounts/forms.py
+from django.contrib.auth.models import User
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage, send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
+from django.urls import reverse
 from .forms import UserRegisterForm, UserLoginForm, UserEditForm, ProfileEditForm
-# Importe o modelo Pedido para exibir os pedidos do usuário no perfil
 from checkout.models import Pedido
 
+
+# REGISTRO DE USUÁRIOS
 def register(request):
     if request.user.is_authenticated:
         messages.info(request, "Você já está logado.")
@@ -19,10 +24,38 @@ def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, f"Conta criada com sucesso para {user.username}!")
-            return redirect('accounts:profile')
+            user = form.save(commit=False)
+            user.is_active = False 
+            user.save()
+            
+            # Envio de e-mail de confirmação
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            
+            current_site = request.get_host()
+            link_confirmacao = reverse('accounts:activate', kwargs={'uidb64': uid, 'token': token})
+            link_completo = f"http://{current_site}{link_confirmacao}"
+
+            email_subject = 'Ative sua Conta na Loja-Django'
+            email_body_html = render_to_string('accounts/email_confirmacao.html', {
+                'user': user,
+                'link_confirmacao': link_completo,
+            })
+            email_body_plain = f"Olá, {user.username}!\n\nAgradecemos por se registrar. Por favor, clique no link abaixo para ativar sua conta:\n\n{link_completo}"
+            
+            try:
+                send_mail(
+                    email_subject,
+                    email_body_plain,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    html_message=email_body_html
+                )
+                messages.success(request, "Conta criada com sucesso! Por favor, verifique seu e-mail para ativar sua conta.")
+            except Exception as e:
+                messages.warning(request, "Conta criada, mas houve um erro ao enviar o e-mail de ativação. Por favor, entre em contato conosco.")
+
+            return redirect('accounts:login')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
@@ -31,7 +64,32 @@ def register(request):
         form = UserRegisterForm()
     return render(request, 'register.html', {'form': form})
 
+
+# ATIVAÇÃO DE CONTA APÓS CONFIRMAÇÃO POR E-MAIL
+def activate(request, uidb64, token):
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.profile.email_verificado = True
+        user.profile.save()
+        user.save()
+        login(request, user)
+        messages.success(request, "Sua conta foi ativada com sucesso! Você já está logado.")
+        return redirect('accounts:profile')
+    else:
+        messages.error(request, "O link de ativação é inválido ou expirou.")
+        return redirect('accounts:register')
+
+
+# LOGING DO USUÁRIO
 def user_login(request):
+ 
     if request.user.is_authenticated:
         messages.info(request, "Você já está logado.")
         return redirect('accounts:profile')
@@ -43,23 +101,23 @@ def user_login(request):
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=username, password=password)
             if user is not None:
+                if not user.is_active:
+                    messages.error(request, "Sua conta não foi ativada. Por favor, verifique seu e-mail.")
+                    return render(request, 'login.html', {'form': form})
+                
                 login(request, user)
                 messages.success(request, f"Bem-vindo de volta, {username}!")
 
-                # --- NOVO CÓDIGO A SER ADICIONADO ---
                 session_key = request.session.session_key
                 if session_key:
                     try:
                         carrinho_anonimo = Carrinho.objects.get(session_key=session_key)
-                        # Associa o carrinho da sessão ao usuário
                         carrinho_anonimo.usuario = user
-                        carrinho_anonimo.session_key = None # Remove a associação com a sessão
+                        carrinho_anonimo.session_key = None
                         carrinho_anonimo.save()
                         messages.info(request, "Seu carrinho foi recuperado!")
                     except Carrinho.DoesNotExist:
-                        pass # Não há carrinho para a sessão, tudo bem.
-                # --- FIM DO NOVO CÓDIGO ---
-
+                        pass
                 return redirect('accounts:profile')
             else:
                 messages.error(request, "Nome de usuário ou senha inválidos.")
@@ -69,14 +127,20 @@ def user_login(request):
         form = UserLoginForm()
     return render(request, 'login.html', {'form': form})
 
+
+# LOGOUT USUÁRIO
 @login_required
 def user_logout(request):
+
     logout(request)
     messages.info(request, "Você foi desconectado com sucesso.")
     return redirect('product:home')
 
+
+# EXIBE O PERFIL DO USUÁRIO
 @login_required
 def profile(request):
+
     pedidos = Pedido.objects.filter(usuario=request.user).order_by('-data_criacao')
 
     if request.method == 'POST':

@@ -76,7 +76,7 @@ def busca_produtos_api(request):
     return Response({"produtos": serializer.data})
 
 
-# A ÚNICA e CORRETA ProdutoListAPIView
+# API Produto Variante
 class ProdutoListAPIView(generics.ListAPIView):
     queryset = Produto.objects.all().prefetch_related('variants', 'categoria', 'marca')
     serializer_class = ProdutoSerializer

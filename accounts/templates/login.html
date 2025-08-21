@@ -8,5 +8,10 @@
     {{ form.as_p }}
     <button type="submit">Entrar</button>
 </form>
-<p>Não tem uma conta? <a href="{% url 'accounts:register' %}">Cadastre-se aqui</a>.</p>
+<p>
+    <a href="{% url 'password_reset' %}">Esqueceu sua senha?</a>
+</p>
+<p>
+    Não tem uma conta? <a href="{% url 'accounts:register' %}">Cadastre-se aqui</a>.
+</p>
 {% endblock %}

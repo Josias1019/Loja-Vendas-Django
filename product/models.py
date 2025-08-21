@@ -29,7 +29,7 @@ class Categoria(models.Model):
         return self.nome
     
 
-# NOVO: MODELO DE MARCA
+# MODELO DE MARCA
 class Marca(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(blank=True, null=True, unique=True)
@@ -37,7 +37,7 @@ class Marca(models.Model):
     class Meta:
         verbose_name_plural = "Marcas"
 
-    # UNICIDADE SLUG (marca)
+    # UNICIDADE SLUG
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.nome)
@@ -69,7 +69,7 @@ class Produto(models.Model):
     desconto = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     lancamento = models.BooleanField(default=False)
 
-    # UNICIDADE DE SLUG (produtos)
+    # UNICIDADE DE SLUG
     def save(self, *args, **kwargs):
         if not self.slug: 
             base_slug = slugify(self.nome)
@@ -104,7 +104,7 @@ class Produto(models.Model):
         lucro_final = preco_final - self.preco_compra
         return lucro_final.quantize(Decimal('0.01'))
     
-    # PROPRIEDADE PARA ESTOQUE TOTAL DAS VARIAÇÕES (RECOMENDADO)
+    # PROPRIEDADE PARA ESTOQUE TOTAL DAS VARIAÇÕES
     @property
     def total_stock(self):
 
@@ -135,7 +135,7 @@ class Produto(models.Model):
         return self.preco_venda 
 
 
-# MODELO DE VARIAÇÃO DE PRODUTO (Tamanho e Cor)
+# MODELO DE VARIAÇÃO DE PRODUTO
 class ProductVariant(models.Model):
     produto = models.ForeignKey(Produto, related_name='variants', on_delete=models.CASCADE)
     cor = models.CharField(max_length=50, blank=True, null=True)

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ative Sua Conta</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h1 style="color: #333333; font-size: 24px; text-align: center;">Confirme seu E-mail</h1>
+                            <p style="color: #666666; font-size: 16px; line-height: 1.5;">Olá, {{ user.username }}!</p>
+                            <p style="color: #666666; font-size: 16px; line-height: 1.5;">
+                                Agradecemos por se registrar em nossa loja. Para ativar sua conta, por favor, clique no botão abaixo:
+                            </p>
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{{ link_confirmacao }}" style="display: inline-block; background-color: #007BFF; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                    Ativar Conta
+                                </a>
+                            </div>
+                            <p style="color: #666666; font-size: 14px; line-height: 1.5; text-align: center;">
+                                Se o botão acima não funcionar, copie e cole o seguinte link em seu navegador:
+                                <br>
+                                <a href="{{ link_confirmacao }}" style="color: #007BFF; word-break: break-all;">{{ link_confirmacao }}</a>
+                            </p>
+                            <p style="color: #999999; font-size: 12px; line-height: 1.5; text-align: center; margin-top: 40px;">
+                                Se você não criou uma conta em nosso site, por favor, ignore este e-mail.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

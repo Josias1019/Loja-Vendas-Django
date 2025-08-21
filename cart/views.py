@@ -1,22 +1,19 @@
-# cart/views.py (ADICIONANDO VIEWS DE API)
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Carrinho, ItemCarrinho
-from product.models import ProductVariant # Importar ProductVariant!
+from product.models import ProductVariant
 from django.views.decorators.http import require_POST
-from django.db import transaction # Importar transaction para atomicidade
+from django.db import transaction 
 
-# Importações para DRF
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
-from rest_framework.permissions import AllowAny # Ou IsAuthenticated, dependendo da sua política
+from rest_framework.permissions import AllowAny
 from .serializers import CarrinhoSerializer, ItemCarrinhoSerializer, ProductVariantSerializer
 
 
-# --- Views HTML existentes (mantidas) ---
 
+# ADICIONAR ITEM AO CARRINHO
 @require_POST
 def adicionar_ao_carrinho(request):
     variant_id = request.POST.get('variant_id')
@@ -72,6 +69,7 @@ def adicionar_ao_carrinho(request):
     return redirect('cart:ver_carrinho')
 
 
+# DETALHES DOS ITENS DO CARRINHO
 def ver_carrinho(request):
     carrinho = None
     itens_carrinho = []
@@ -94,6 +92,8 @@ def ver_carrinho(request):
 
     return render(request, 'carrinho.html', {'carrinho': carrinho, 'itens_carrinho': itens_carrinho})
 
+
+# REMOVE ITEM DO CARRINHO
 @require_POST
 def remover_do_carrinho(request, item_id):
     item = get_object_or_404(ItemCarrinho, id=item_id)
@@ -111,6 +111,8 @@ def remover_do_carrinho(request, item_id):
     messages.success(request, "Item removido do carrinho.")
     return redirect('cart:ver_carrinho')
 
+
+# ATUALIZA CARRINHO
 @require_POST
 def atualizar_quantidade(request, item_id):
     item = get_object_or_404(ItemCarrinho, id=item_id)
@@ -147,10 +149,12 @@ def atualizar_quantidade(request, item_id):
     return redirect('cart:ver_carrinho')
 
 
-# --- Novas Views de API para o Carrinho ---
+# ----- APIs ----- #
 
+
+# API de Detalhe do Carrinho
 class CartDetailAPIView(APIView):
-    permission_classes = [AllowAny] # Ajuste conforme sua política de autenticação
+    permission_classes = [AllowAny]
 
     def get_object(self, request):
         if request.user.is_authenticated:
@@ -164,16 +168,16 @@ class CartDetailAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         carrinho = self.get_object(request)
-        serializer = CarrinhoSerializer(carrinho, context={'request': request}) # Passe o request para o serializer
+        serializer = CarrinhoSerializer(carrinho, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, *args, **kwargs):
-        # API para esvaziar o carrinho
         carrinho = self.get_object(request)
-        carrinho.itens.all().delete() # Remove todos os itens do carrinho
+        carrinho.itens.all().delete()
         return Response({"message": "Carrinho esvaziado com sucesso."}, status=status.HTTP_204_NO_CONTENT)
 
 
+# API para Adicionar Item no Carrinho
 class CartAddItemAPIView(APIView):
     permission_classes = [AllowAny]
 
@@ -215,7 +219,6 @@ class CartAddItemAPIView(APIView):
                 item_carrinho.quantidade = nova_quantidade_total
                 item_carrinho.save()
 
-                # Retorna o carrinho atualizado
                 serializer = CarrinhoSerializer(carrinho, context={'request': request})
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -225,15 +228,14 @@ class CartAddItemAPIView(APIView):
             return Response({"error": f"Ocorreu um erro: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# API para Atualizar Item do carrinho
 class CartUpdateItemAPIView(APIView):
     permission_classes = [AllowAny]
 
     def put(self, request, item_id, *args, **kwargs):
-        # PUT para substituir a quantidade
         return self._update_item(request, item_id, 'put')
 
     def patch(self, request, item_id, *args, **kwargs):
-        # PATCH para atualizar parcialmente (ex: apenas a quantidade)
         return self._update_item(request, item_id, 'patch')
 
     def _update_item(self, request, item_id, method_type):
@@ -241,7 +243,6 @@ class CartUpdateItemAPIView(APIView):
             item_carrinho = get_object_or_404(ItemCarrinho.objects.select_for_update(), id=item_id)
             variant = item_carrinho.product_variant
 
-            # Validação de permissão
             if request.user.is_authenticated:
                 if item_carrinho.carrinho.usuario != request.user:
                     return Response({"error": "Não autorizado."}, status=status.HTTP_403_FORBIDDEN)
@@ -278,6 +279,7 @@ class CartUpdateItemAPIView(APIView):
             return Response({"error": f"Ocorreu um erro: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# API para Remover Item do Carrinho
 class CartRemoveItemAPIView(APIView):
     permission_classes = [AllowAny]
 
@@ -285,7 +287,6 @@ class CartRemoveItemAPIView(APIView):
         try:
             item_carrinho = get_object_or_404(ItemCarrinho, id=item_id)
 
-            # Validação de permissão
             if request.user.is_authenticated:
                 if item_carrinho.carrinho.usuario != request.user:
                     return Response({"error": "Não autorizado."}, status=status.HTTP_403_FORBIDDEN)

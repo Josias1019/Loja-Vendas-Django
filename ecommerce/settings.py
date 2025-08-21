@@ -150,3 +150,14 @@ CKEDITOR_5_CONFIGS = {
         'removePlugins': ["CKBox", "CKFinder", "EasyImage", "RealTimeCollaborativeComments", "RealTimeCollaborativeTrackChanges", "RealTimeCollaborativeRevisionHistory", "PresenceList", "Comments", "TrackChanges", "RevisionHistory", "Pagination", "WProofreader", "SourceEditing"],
     }
 }
+
+
+
+# SERVIDOR DE RECUPERAÇÃO DE SENHA
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'josiascraft1019@gmail.com'
+EMAIL_HOST_PASSWORD = 'plpw raow ufje pdwr'
+DEFAULT_FROM_EMAIL = 'josiascraft1019@gmail.com'

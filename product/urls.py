@@ -1,5 +1,3 @@
-# product/urls.py (CORRIGIDO)
-
 from django.urls import path
 from .views import (
     home, produto, busca_produtos_api, 
@@ -17,7 +15,7 @@ urlpatterns = [
     path('', home, name='home'),
     path('produto/<slug:slug>/', produto, name='produto'),
 
-    # ------ APIs ------ 
+    # ------ APIs ------ #
 
     path('api/busca/', busca_produtos_api, name='api_busca_produtos'),
     path('api/produtos/', ProdutoListAPIView.as_view(), name='api_lista_produtos'), 

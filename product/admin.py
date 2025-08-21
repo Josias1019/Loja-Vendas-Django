@@ -1,13 +1,11 @@
-# product/admin.py
-
 from django.contrib import admin
 from .models import Produto, Categoria, Marca, ProductVariant
 
 
-# Inline para variações de produto (Cor e Tamanho)
+# REGISTRO DE VARIANTES DE PRODUTOS
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
-    extra = 1 # Quantidade de formulários vazios para adicionar novas variações
+    extra = 1
     fields = ('cor', 'tamanho', 'quantidade', 'ajuste_preco') 
     readonly_fields = ('sku',) 
     show_change_link = True 
@@ -30,7 +28,7 @@ class CategoriaAdmin(admin.ModelAdmin):
     search_fields = ('nome',)
 
 
-# Adminstração de Produtos
+# ADMINISTRAÇÃO DE PRODUTOS
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
 
@@ -54,15 +52,15 @@ class ProdutoAdmin(admin.ModelAdmin):
             'fields': ('preco_compra', 'preco_venda', 'desconto')
         }),
         ('Status do Produto', {
-            'fields': ('lancamento', 'destaque',) # <--- REMOVIDO 'data_lancamento' AQUI
+            'fields': ('lancamento', 'destaque',)
         }),
     )
 
-    # Métodos para exibir informações na list_display
+
     def total_stock(self, obj):
-        # Este método acessa a propriedade 'total_stock' do modelo Produto
+        
         return obj.total_stock
-    total_stock.short_description = 'Estoque Total' # Título da coluna
+    total_stock.short_description = 'Estoque Total'
 
     def min_variant_price(self, obj):
         return obj.min_variant_price

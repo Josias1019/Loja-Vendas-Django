@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Pedido - Loja Django</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h1 style="color: #333333; font-size: 24px; margin-top: 0;">Pedido Confirmado!</h1>
+                            <p style="color: #666666; font-size: 16px; line-height: 1.6;">Olá, {{ pedido.nome_completo }}!</p>
+                            <p style="color: #666666; font-size: 16px; line-height: 1.6;">Obrigado por sua compra! Estamos processando seu pedido e você será notificado quando ele for enviado.</p>
+                            
+                            <h2 style="color: #333333; font-size: 20px; margin-top: 30px;">Detalhes do Pedido #{{ pedido.id }}</h2>
+                            <p style="color: #666666; font-size: 14px; margin: 5px 0;">Data do Pedido: {{ pedido.data_criacao|date:"d/m/Y H:i" }}</p>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top: 20px; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background-color: #eeeeee;">
+                                        <th style="padding: 10px; text-align: left; color: #333333;">Produto</th>
+                                        <th style="padding: 10px; text-align: center; color: #333333;">Qtd</th>
+                                        <th style="padding: 10px; text-align: right; color: #333333;">Preço</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in pedido.itens.all %}
+                                    <tr>
+                                        <td style="padding: 10px; border-bottom: 1px solid #dddddd;">{{ item.product_variant.produto.nome }} ({{ item.product_variant.cor }}/{{ item.product_variant.tamanho }})</td>
+                                        <td style="padding: 10px; text-align: center; border-bottom: 1px solid #dddddd;">{{ item.quantidade }}</td>
+                                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #dddddd;">R$ {{ item.preco_unitario_na_compra|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr style="font-weight: bold;">
+                                        <td colspan="2" style="padding: 10px; text-align: right;">Total:</td>
+                                        <td style="padding: 10px; text-align: right;">R$ {{ pedido.total_geral|floatformat:2 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <h2 style="color: #333333; font-size: 20px; margin-top: 30px;">Endereço de Entrega</h2>
+                            <p style="color: #666666; font-size: 16px; line-height: 1.6;">
+                                {{ pedido.nome_completo }}<br>
+                                {{ pedido.endereco }}<br>
+                                {{ pedido.cidade }}, {{ pedido.estado }} - {{ pedido.cep }}<br>
+                                {{ pedido.telefone }}
+                            </p>
+
+                            <p style="text-align: center; margin-top: 40px;">
+                                <a href="http://{{ request.get_host }}{% url 'accounts:profile' %}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 5px;">Acompanhar Pedido</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
